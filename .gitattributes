@@ -1,0 +1,4 @@
+src/data/eval/*.jsonl text eol=lf
+src/data/eval/*.json text eol=lf
+src/config/*.yaml text eol=lf
+src/reports/** text eol=lf
