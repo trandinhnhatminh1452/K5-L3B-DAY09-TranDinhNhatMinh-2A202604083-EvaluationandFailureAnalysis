@@ -40,3 +40,15 @@ Card này đi kèm mỗi báo cáo đánh giá và được sử dụng để th
   - Chưa thử nghiệm trực tiếp trên lưu lượng người dùng thực tế ngoài môi trường production.
 - **Khi nào tăng eval-set version:**
   - Khi bổ sung tập tấn công biên / đối kháng (adversarial pack) hoặc phát hiện thêm các failure mode mới từ môi trường thực tế $\rightarrow$ Nâng cấp lên v2 và thiết lập baseline mới.
+
+## Eval set v2 (Advanced / Expert: M5–M7)
+
+- **Eval set v2** (`eval_set_v2.jsonl`, 28 item = 14 v1 + 14 adversarial, 0 vấn đề khi `evalset --check`), cơ chế tấn công ánh xạ sang FM qua `config/fm_map.yaml`, mỗi FM bị tấn công có ≥ 3 item.
+- **Ngưỡng chọn từ A/A** (2 bộ seed, cùng agent; `lab9.mutation --aa 66,77,88,99,110`): với MockLLM xác định, chênh lệch A/A của mọi metric = 0, nên dải nhiễu đo được là 0. `pass_hat_5` baseline = 0.8929, sàn đặt **0.80**: thấp hơn baseline một khoảng đủ lớn để PR trung thực không bị chặn ngẫu nhiên, nhưng đủ cao để bắt lỗi làm tròn 1/5 seed (`flaky_regression`).
+- **Slice nào bắt lỗi nào:**
+  - `money_movement` (min 0.90, no_significant_drop) → `slice_regression` (lỗi chỉ ở claim có hoàn tiền, trung bình toàn cục vẫn trên sàn).
+  - `adversarial` (min 0.80) → lỗi chỉ lộ ở item đối kháng.
+  - `denial` giữ nguyên từ v1.
+  - `pass_hat_5` → `flaky_regression`; `reply_matches_ledger` → FM-08.
+- **Integrity / ratchet** (`gate.integrity_check`, `--base-spec`): chặn NaN/None, thiếu hoặc trùng dòng, tập (item, seed) khác baseline, evaluator failure, nới ngưỡng/bỏ slice/bỏ `no_significant_drop`, đổi slice tag. Cả 4 trap công khai bị chặn (exit 0 của `lab9.traps`).
+- **Giới hạn cỡ mẫu:** bug chỉ xuất hiện ở 1/3 seed (`rare`) không phát hiện ổn định được với 5 seed; không hạ ngưỡng để "bắt" nó. Cần tăng số seed hoặc số item trước khi tin kết luận ở mức slice nhỏ. A/A bằng 0 là do MockLLM xác định, không phản ánh nhiễu của LLM thật.
